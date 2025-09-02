@@ -1,0 +1,65 @@
+site_name: The Drive
+site_description: Documentation for Zenith Drive - An intelligent, secure cloud storage solution
+site_author: Your Team Name
+site_url: https://Chigup0.github.io/zenith-drive
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+
+
+
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - System Design: architecture/system-design.md
+    - Data Flow: architecture/data-flow.md
+    - Security: architecture/security.md
+    - Trade Offs : architecture/trade-off.md
+  - Setup & Installation:
+    
+    - Installation: setup/local_install.md
+    - Configuration: setup/configuration.md
+  - AI - Pipeline Guide:
+    - Overview: ai_pipeline/overview.md
+    - Features: ai_pipeline/features.md
+    - Pipeline: ai_pipeline/pipeline.md
+    - Functions: ai_pipeline/functions.md
+  - API Reference:
+    - Authentication: api/authentication.md
+    - File Operations: api/file-operations.md
+    - AI Chat Endpoints: api/chat_endpoints.md
+    - Examples: api/examples.md
+  - Deployment:
+    - Website: deploy/website.md
+    - Android App: deploy/app.md
+    - Troubleshooting: deploy/trouble.md
+  - About:
+    - Team: about/team.md
+    - Acknowledgments: about/acknowledgments.md
+    - License: about/license.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-username/zenith-drive
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/your-handle
