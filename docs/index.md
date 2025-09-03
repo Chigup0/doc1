@@ -86,7 +86,7 @@ TheDrive is built using a **microservices architecture** with a **serverless bac
    - Powers the core services of the application, handling user authentication, file management, and AI query processing. It communicates with databases and AI models to provide intelligent responses.
    
 - **AI Layer**:
-   - A set of machine learning models and algorithms that process text, images, and tables to provide users with insights, document summaries, and analytics.
+   - A RAG+KAG pipeline that process text, images, and tables to provide users with insights, document summaries, and analytics.
 
 - **Database Layer**:
    - The system uses a combination of **SQL databases** (for general metadata and user data) and **graph databases** (Neo4j) for representing complex relationships between files and metadata.
@@ -95,23 +95,8 @@ TheDrive is built using a **microservices architecture** with a **serverless bac
    - The system is hosted on **cloud platforms** like AWS and Azure, ensuring scalability, high availability, and reliability.
 
 ### Security
-
-**TheDrive** has been built with security as a top priority. It uses **end-to-end encryption** (E2EE) to ensure that data is encrypted both **at rest** and **in transit**.
-
-- **Admin Access**: No administrative user has access to the data. All data remains fully encrypted unless explicitly accessed by the user.
 - **Data Isolation**: Each user’s data is physically and logically isolated to prevent unauthorized access or leakage.
 
 ---
 
-## Conclusion
-
-**TheDrive** is not just a cloud storage solution—it's an **intelligent**, **AI-powered** platform that changes the way users interact with their files. By offering powerful tools for **searching**, **analyzing**, and **interacting** with data, all while ensuring the highest levels of **security** and **privacy**, TheDrive aims to redefine the future of cloud storage.
-
-TheDrive offers:
-- Smarter interaction with digital assets using AI.
-- Advanced **file analysis** capabilities.
-- **Seamless integration** with various data formats.
-- A strong focus on **security** and **data privacy**.
-
-This makes **TheDrive** an ideal solution for users who need more than just storage—they need a smarter, more secure way to handle their data.
 
