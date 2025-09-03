@@ -1,7 +1,6 @@
 
 ### docs/usage/ai-features.md
 
-```markdown
 # AI Features Guide
 
 Zenith Drive incorporates advanced AI capabilities to enhance your file management experience.
