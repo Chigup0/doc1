@@ -37,7 +37,7 @@ nav:
   - Setup & Installation:
     
     - Installation: setup/local_install.md
-    - Configuration: setup/configuration.md
+    
   - AI - Pipeline Guide:
     - Overview: ai_pipeline/overview.md
     - Features: ai_pipeline/features.md
@@ -47,15 +47,12 @@ nav:
     - Authentication: api/authentication.md
     - File Operations: api/file-operations.md
     - AI Chat Endpoints: api/chat_endpoints.md
-    - Examples: api/examples.md
+    
   - Deployment:
     - Website: deploy/website.md
     - Android App: deploy/app.md
     - Troubleshooting: deploy/trouble.md
-  - About:
-    - Team: about/team.md
-    - Acknowledgments: about/acknowledgments.md
-    - License: about/license.md
+  
 
 extra:
   social:
