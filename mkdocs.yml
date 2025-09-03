@@ -49,9 +49,7 @@ nav:
     - AI Chat Endpoints: api/chat_endpoints.md
     
   - Deployment:
-    - Website: deploy/website.md
-    - Android App: deploy/app.md
-    - Troubleshooting: deploy/trouble.md
+    - Populate: populate.md
   
 
 extra:
