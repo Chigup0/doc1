@@ -316,7 +316,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../deploy/populate/" class="md-tabs__link">
+        <a href="../../populate.md" class="md-tabs__link">
           
   
   
@@ -663,6 +663,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#running-the-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running The scripts
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -990,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../deploy/populate/" class="md-nav__link">
+      <a href="../../populate.md" class="md-nav__link">
         
   
   
@@ -1036,6 +1045,13 @@
 <p>docker-compose build
 docker-compose up -d</p>
 <p>This exposes the frontend to the 3000 port, env variables need to set by the user</p>
+<h2 id="running-the-scripts">Running The scripts</h2>
+<p><code>cd backend/scripts</code></p>
+<p><code>python populate_users.py &lt;path of target folder&gt;</code></p>
+<p>often time it was observed that tee system was unable to load .env from backend </p>
+<p>hence </p>
+<p>add the following code to top of populate_users.py</p>
+<p><code>load_dotenv(dotenv_path=Path(__file__).parent.parent / '.env')</code></p>
 
 
 
