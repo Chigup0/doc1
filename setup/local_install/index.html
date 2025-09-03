@@ -316,7 +316,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../deploy/website/" class="md-tabs__link">
+        <a href="../../populate.md" class="md-tabs__link">
           
   
   
@@ -655,119 +655,11 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#prerequisites" class="md-nav__link">
+  <a href="#local-run-using-docker" class="md-nav__link">
     <span class="md-ellipsis">
-      Prerequisites
+      Local run using docker
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Prerequisites">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#system-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      System Requirements
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#backend-setup-fastapi" class="md-nav__link">
-    <span class="md-ellipsis">
-      Backend Setup (FastAPI)
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Backend Setup (FastAPI)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#step-1-clone-the-repository" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 1: Clone the Repository
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-2-installing-requirements" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 2: Installing requirements
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#step-3-configure-environment-variables-both-for-frontend-and-backend" class="md-nav__link">
-    <span class="md-ellipsis">
-      Step 3: Configure Environment variables both for frontend and backend
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-typescript" class="md-nav__link">
-    <span class="md-ellipsis">
-      Getting TypeScript
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#project-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      Project Structure
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#building-the-project" class="md-nav__link">
-    <span class="md-ellipsis">
-      Building the project
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Building the project">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#configuring-typescript-compilation" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configuring TypeScript compilation
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#running-the-build" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running the build
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1098,58 +990,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../../deploy/website/" class="md-nav__link">
+      <a href="../../populate.md" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Website
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../deploy/app/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Android App
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../deploy/trouble.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Troubleshooting
+    Populate
     
   </span>
   
@@ -1185,188 +1031,11 @@
 
 <h1 id="local-setup-guide">Local Setup Guide</h1>
 <p>This guide explains how to set up both the <strong>Frontend (Next.js)</strong> and <strong>Backend (FastAPI)</strong> locally for development. It also covers the environment variable configuration necessary for both parts of the application.</p>
-<hr />
-<h2 id="prerequisites">Prerequisites</h2>
-<p>Before running the project locally, ensure the following prerequisites are installed.</p>
-<h3 id="system-requirements"><strong>System Requirements</strong></h3>
-<ul>
-<li><strong>Python 3.10+</strong></li>
-<li><strong>Node.js 18+</strong> (for Next.js frontend)</li>
-<li><strong>npm</strong> or <strong>yarn</strong></li>
-<li><strong>Git</strong></li>
-<li><strong>PostgreSQL</strong> (or any other supported database for the backend)</li>
-<li><strong>Neo4j</strong> (for graph-based AI data storage, optional but recommended)</li>
-<li><strong>AWS CLI</strong> (for integration with AWS services)</li>
-</ul>
-<hr />
-<h2 id="backend-setup-fastapi">Backend Setup (FastAPI)</h2>
-<h3 id="step-1-clone-the-repository">Step 1: Clone the Repository</h3>
-<p>Clone the project repository to your local machine:</p>
-<pre><code class="language-bash">git clone &lt;your-repository-url&gt;
-cd &lt;project-directory&gt;
-</code></pre>
-<h3 id="step-2-installing-requirements">Step 2: Installing requirements</h3>
-<p>Move into <code>backend</code> folder and install requirements by: </p>
-<pre><code>cd backend
-pip install -r requirements.txt
-</code></pre>
-<h3 id="step-3-configure-environment-variables-both-for-frontend-and-backend">Step 3: Configure Environment variables both for frontend and backend</h3>
-<p>Create a <code>.env</code> file in backend like this example:</p>
-<pre><code>envexample
-</code></pre>
-<p>Then move to frontend and create a <code>.env.local</code> with contents like this :
-<code>code</code></p>
-<ul>
-<li>Install dependencies</li>
-</ul>
-<pre><code>cd &lt;project_name&gt;
-npm install
-</code></pre>
-<ul>
-<li>Build and run the project</li>
-</ul>
-<pre><code>npm start
-</code></pre>
-<p>Navigate to <code>http://localhost:8001</code></p>
-<ul>
-<li>API Document endpoints</li>
-</ul>
-<p>swagger Spec Endpoint : http://localhost:8001/api-docs </p>
-<p>swagger-ui  Endpoint : http://localhost:8001/docs </p>
-<p>The main purpose of this repository is to show a project setup and workflow for writing microservice. The Rest APIs will be using the Swagger (OpenAPI) Specification.</p>
-<h2 id="getting-typescript">Getting TypeScript</h2>
-<p>Add Typescript to project <code>npm</code>.</p>
-<pre><code>npm install -D typescript
-</code></pre>
-<h2 id="project-structure">Project Structure</h2>
-<p>The folder structure of this app is explained below:</p>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>dist</strong></td>
-<td>Contains the distributable (or output) from your TypeScript build.</td>
-</tr>
-<tr>
-<td><strong>node_modules</strong></td>
-<td>Contains all  npm dependencies</td>
-</tr>
-<tr>
-<td><strong>src</strong></td>
-<td>Contains  source code that will be compiled to the dist dir</td>
-</tr>
-<tr>
-<td><strong>configuration</strong></td>
-<td>Application configuration including environment-specific configs</td>
-</tr>
-<tr>
-<td><strong>src/controllers</strong></td>
-<td>Controllers define functions to serve various express routes.</td>
-</tr>
-<tr>
-<td><strong>src/lib</strong></td>
-<td>Common libraries to be used across your app.</td>
-</tr>
-<tr>
-<td><strong>src/middlewares</strong></td>
-<td>Express middlewares which process the incoming requests before handling them down to the routes</td>
-</tr>
-<tr>
-<td><strong>src/routes</strong></td>
-<td>Contain all express routes, separated by module/area of application</td>
-</tr>
-<tr>
-<td><strong>src/models</strong></td>
-<td>Models define schemas that will be used in storing and retrieving data from Application database</td>
-</tr>
-<tr>
-<td><strong>src/monitoring</strong></td>
-<td>Prometheus metrics</td>
-</tr>
-<tr>
-<td><strong>src</strong>/index.ts</td>
-<td>Entry point to express app</td>
-</tr>
-<tr>
-<td>package.json</td>
-<td>Contains npm dependencies as well as <a href="#what-if-a-library-isnt-on-definitelytyped">build scripts</a></td>
-</tr>
-<tr>
-<td>tslint.json</td>
-<td>Config settings for TSLint code style checking</td>
-</tr>
-</tbody>
-</table>
-<h2 id="building-the-project">Building the project</h2>
-<h3 id="configuring-typescript-compilation">Configuring TypeScript compilation</h3>
-<pre><code class="language-json">{
-    &quot;compilerOptions&quot;: {
-      &quot;target&quot;: &quot;es5&quot;,
-      &quot;module&quot;: &quot;commonjs&quot;,
-      &quot;outDir&quot;: &quot;dist&quot;,
-      &quot;sourceMap&quot;: true
-    },
-
-    &quot;include&quot;: [
-      &quot;src/**/*.ts&quot;
-
-
-    ],
-    &quot;exclude&quot;: [
-      &quot;src/**/*.spec.ts&quot;,
-      &quot;test&quot;,
-      &quot;node_modules&quot;
-
-    ]
-  }
-
-</code></pre>
-<h3 id="running-the-build">Running the build</h3>
-<p>All the different build steps are orchestrated via <a href="https://docs.npmjs.com/misc/scripts">npm scripts</a>.
-Npm scripts basically allow us to call (and chain) terminal commands via npm.</p>
-<table>
-<thead>
-<tr>
-<th>Npm Script</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>start</code></td>
-<td>Runs full build and runs node on dist/index.js. Can be invoked with <code>npm start</code></td>
-</tr>
-<tr>
-<td><code>build:copy</code></td>
-<td>copy the *.yaml file to dist/ folder</td>
-</tr>
-<tr>
-<td><code>build:live</code></td>
-<td>Full build. Runs ALL build tasks</td>
-</tr>
-<tr>
-<td><code>build:dev</code></td>
-<td>Full build. Runs ALL build tasks with all watch tasks</td>
-</tr>
-<tr>
-<td><code>dev</code></td>
-<td>Runs full build before starting all watch tasks. Can be invoked with <code>npm dev</code></td>
-</tr>
-<tr>
-<td><code>test</code></td>
-<td>Runs build and run tests using mocha</td>
-</tr>
-<tr>
-<td><code>lint</code></td>
-<td>Runs TSLint on project files</td>
-</tr>
-</tbody>
-</table>
+<h3 id="local-run-using-docker">Local run using docker</h3>
+<p>TO run the system using docker, just run the command</p>
+<p>docker-compose build
+docker-compose up -d</p>
+<p>This exposes the frontend to the 3000 port, env variables need to set by the user</p>
 
 
 
