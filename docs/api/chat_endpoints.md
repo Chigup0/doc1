@@ -1,222 +1,505 @@
-# Chat API for TheDrive
+# RAG + Knowledge Graph (KAG) Architecture Documentation
 
-The **Chat API** in **TheDrive** enables users to interact with their files through intelligent queries, powered by **GraphRAG**. The API handles **chat-based queries**, performs **context validation**, and provides users with answers based on AI processing. It also checks the **status of AI processing** for each user.
+## Overview
 
----
+TheDrive implements a sophisticated hybrid retrieval system that combines **Retrieval-Augmented Generation (RAG)** with **Knowledge Graphs** to provide intelligent document search and conversational AI capabilities. This system processes user documents through multiple layers of analysis to create both vector embeddings and structured knowledge representations.
 
-## 1. Endpoints Overview
+## System Architecture
 
-The following endpoints are available in the Chat API:
+### High-Level Components
 
-1. **POST /query**: Handles chat queries related to files and folders, using GraphRAG to provide intelligent answers.
-2. **GET /status**: Provides the status of the user's chat readiness, including the number of files processed by AI.
-
----
-
-## 2. Endpoint Details
-
-### 2.1 POST /query
-
-This endpoint handles user chat queries. The query is processed by the **GraphRAG** module, which generates a response based on the file context or AI processing.
-
-#### Request Body:
-A sample request body is like :
-***json***
-```
-{
-    "query": "What is the total revenue from last year's financial report?",
-    "context": "file-12345"  // Optional: Can specify a file/folder context
-}
-```
-query: The user's question or query.
-
-context: The file or folder context in which the query is being asked (optional).
-
-Response:
-
-200 OK: Returns the answer to the query and the relevant sources.
-
-500 Internal Server Error: If an error occurs during chat processing.
-
-Example Response:
-```
-{
-    "answer": "The total revenue from last year's financial report is $5 million.",
-    "sources": [
-        {
-            "id": "community-1",
-            "name": "Knowledge Cluster 1",
-            "relevance": 0.95
-        },
-        {
-            "id": "community-2",
-            "name": "Knowledge Cluster 2",
-            "relevance": 0.90
-        }
-    ]
-}
-```
-**Code Example** :
-```
-@router.post("/query", response_model=schemas.ChatResponse)
-async def handle_chat_query(
-    query: schemas.ChatQuery,
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    """Handle chat queries with GraphRAG"""
-    try:
-        if not GRAPHRAG_AVAILABLE:
-            # Fallback to mock response
-            return {
-                "answer": f"GraphRAG not available. Mock response for: '{query.query}'",
-                "sources": []
-            }
-        
-        # Validate context if specified
-        if query.context and query.context != "drive":
-            # Check if user owns the folder/file
-            item = db.query(models.FileSystemItem).filter_by(
-                id=query.context,
-                owner_id=current_user.id
-            ).first()
-            if not item:
-                raise HTTPException(status_code=404, detail="Context not found or access denied")
-        
-        # Get user's GraphRAG chatter
-        chatter = await get_user_chatter(current_user.id)
-        
-        # Process the query
-        result = await chatter.ask_question(query.query, "hybrid")
-        
-        if 'error' in result:
-            raise HTTPException(status_code=500, detail=result['error'])
-        
-        # Format sources from GraphRAG result
-        sources = []
-        if result.get('graphrag_details'):
-            # Extract source information from GraphRAG
-            communities = result['graphrag_details'].get('selected_communities', [])
-            for i, community in enumerate(communities[:3]):  # Top 3 sources
-                sources.append({
-                    "id": f"community-{i}",
-                    "name": f"Knowledge Cluster {i+1}",
-                    "relevance": result.get('confidence', 0.5)
-                })
-        
-        return schemas.ChatResponse(
-            answer=result['answer'],
-            sources=sources
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat processing error: {str(e)}")
-```
-
-2.2 GET /status
-
-This endpoint retrieves the chat readiness status for a user, including the number of files that have been processed by AI. It helps users understand if their files are ready for interaction with GraphRAG.
-
-Response:
-
-- 200 OK: Returns the current status of chat readiness.
-
-- 503 Service Unavailable: If GraphRAG service is not available.
-
-Example Response:
-
-```
-{
-    "ready": true,
-    "message": "Chat ready with 5 processed files",
-    "processed_files": 5,
-    "total_files": 10,
-    "processing_percentage": 50
-}
-```
-Code Example:
-```
-@router.get("/status")
-async def get_chat_status(
-    db: Session = Depends(database.get_db),
-    current_user: models.User = Depends(get_current_user)
-):
-    """Get chat readiness status for user"""
-    if not GRAPHRAG_AVAILABLE:
-        return {
-            "ready": False,
-            "message": "GraphRAG service not available",
-            "processed_files": 0,
-            "total_files": 0
-        }
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[React/Next.js UI]
+        Chat[Chat Interface]
+        Files[File Management]
+    end
     
-    # Count user's files and processing status
-    files = db.query(models.FileSystemItem).filter_by(
-        owner_id=current_user.id,
-        type="file"
-    ).all()
+    subgraph "API Layer"
+        Backend[FastAPI Backend]
+        RagAPI[GraphRAG API]
+    end
     
-    total_files = len(files)
-    processed_files = sum(1 for f in files if getattr(f, 'ai_processed', False))
+    subgraph "Processing Layer"
+        Ingestion[Document Ingestion]
+        Chunking[Text Chunking]
+        Embedding[Vector Embedding]
+        GraphExtraction[Entity/Relation Extraction]
+    end
     
-    return {
-        "ready": processed_files > 0,
-        "message": f"Chat ready with {processed_files} processed files" if processed_files > 0 else "No files processed yet",
-        "processed_files": processed_files,
-        "total_files": total_files,
-        "processing_percentage": (processed_files / total_files * 100) if total_files > 0 else 0
-    }
+    subgraph "Storage Layer"
+        S3[AWS S3<br/>File Storage]
+        Postgres[PostgreSQL<br/>User/File Metadata]
+        Chroma[ChromaDB<br/>Vector Store]
+        Neo4j[Neo4j<br/>Knowledge Graph]
+    end
+    
+    UI --> Backend
+    Chat --> RagAPI
+    Files --> Backend
+    Backend --> S3
+    Backend --> Postgres
+    RagAPI --> Ingestion
+    Ingestion --> Chunking
+    Chunking --> Embedding
+    Chunking --> GraphExtraction
+    Embedding --> Chroma
+    GraphExtraction --> Neo4j
 ```
-3. GraphRAG Integration
-3.1 What is GraphRAG?
 
-GraphRAG is an AI-powered tool for processing and querying PDF documents and other types of data. It enables users to ask context-aware questions and receive answers by analyzing document contents, relationships, and AI-generated insights.
+## Document Ingestion Pipeline
 
-- PDFChatter: This is a module in GraphRAG that is used to process PDF documents and generate responses based on their content.
+### 1. File Upload & Storage Flow
 
-- Graph-Based Queries: The system uses graph-based algorithms to understand the relationships between entities within the documents and provide relevant answers.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant S3
+    participant Database
+    participant RAG_API
+    
+    User->>Frontend: Upload Document
+    Frontend->>Backend: POST /upload
+    Backend->>S3: Store File
+    S3-->>Backend: File URL
+    Backend->>Database: Save File Metadata
+    Database-->>Backend: File ID
+    Backend->>RAG_API: Trigger Ingestion
+    RAG_API-->>Backend: Ingestion Started
+    Backend-->>Frontend: Upload Success
+    Frontend-->>User: File Uploaded
+```
 
-3.2 Chat Handling
+### 2. Document Processing Pipeline
 
-Each user has a GraphRAG chatter instance that interacts with documents and data specific to that user.
+```mermaid
+graph LR
+    subgraph "Document Ingestion"
+        A[Raw Document] --> B[File Type Detection]
+        B --> C[Content Extraction]
+        C --> D[Text Preprocessing]
+    end
+    
+    subgraph "Parallel Processing"
+        D --> E[Text Chunking]
+        D --> F[Entity Extraction]
+        
+        E --> G[Vector Embedding]
+        F --> H[Relation Extraction]
+        F --> I[Entity Linking]
+        
+        G --> J[Store in ChromaDB]
+        H --> K[Store in Neo4j]
+        I --> K
+    end
+    
+    subgraph "Confidence Validation"
+        K --> L[Confidence Scoring]
+        L --> M[Quality Filtering]
+        M --> N[Graph Cleanup]
+    end
+```
 
-The PDFChatter processes files (if available) and returns relevant answers to the queries asked by users.
+## RAG Implementation
 
-The system allows for context-specific queries, where users can ask questions related to a specific file or document.
+### Traditional RAG Process
 
-3.3 Example Workflow
+```mermaid
+graph TD
+    A[User Query] --> B[Query Preprocessing]
+    B --> C[Vector Embedding]
+    C --> D[Similarity Search in ChromaDB]
+    D --> E[Retrieve Top-K Chunks]
+    E --> F[Context Assembly]
+    F --> G[LLM Prompt Construction]
+    G --> H[Gemini API Call]
+    H --> I[Generated Response]
+    I --> J[Response Post-processing]
+    J --> K[Return to User]
+```
 
-- User Query: A user asks, "What is the total revenue from last year's financial report?"
+### Enhanced KAG Process
 
-- Context Verification: If the query specifies a file context, the system ensures the user owns the file.
+```mermaid
+graph TD
+    A[User Query] --> B[Query Analysis]
+    B --> C[Entity Extraction from Query]
+    C --> D[Parallel Retrieval]
+    
+    subgraph "Dual Retrieval System"
+        D --> E[Vector Search in ChromaDB]
+        D --> F[Graph Traversal in Neo4j]
+        
+        E --> G[Text Chunks]
+        F --> H[Graph Facts]
+    end
+    
+    G --> I[Context Enrichment]
+    H --> I
+    I --> J[Structured Context Assembly]
+    J --> K[Enhanced LLM Prompt]
+    K --> L[Gemini API with Rich Context]
+    L --> M[Comprehensive Response]
+```
 
-- GraphRAG Processing: The PDFChatter analyzes the document to extract relevant information.
+## Knowledge Graph Construction
 
-- Response: The system returns the extracted answer and relevant sources from the document, if available.
+### Entity and Relation Extraction
 
-4. Error Handling and Fallbacks
+```mermaid
+graph LR
+    subgraph "Text Processing"
+        A[Document Chunk] --> B[Named Entity Recognition]
+        B --> C[Relation Extraction]
+        C --> D[Entity Linking]
+    end
+    
+    subgraph "Graph Construction"
+        D --> E[Entity Nodes Creation]
+        D --> F[Relationship Edges Creation]
+        E --> G[Property Assignment]
+        F --> H[Confidence Scoring]
+    end
+    
+    subgraph "Quality Assurance"
+        G --> I[Validation Rules]
+        H --> I
+        I --> J[Confidence Thresholds]
+        J --> K[Graph Storage in Neo4j]
+    end
+```
 
-GraphRAG Not Available: If the GraphRAG service is not available, the system will provide a mock response indicating that GraphRAG is unavailable.
+### Graph Schema
 
-Context Not Found: If the specified context (e.g., a file ID) is invalid or the user does not own the file, an HTTP 404 error is returned.
+```cypher
+// Example Neo4j Schema
+(:Document {id, name, type, owner_id})
+(:Entity {name, type, confidence, embedding_vector})
+(:Person {name, title, organization})
+(:Organization {name, industry, location})
+(:Concept {name, definition, category})
 
-Query Processing Error: Any unexpected error during query processing (e.g., failure in AI processing) will result in a 500 Internal Server Error with a detailed error message.
+// Relationships
+(:Entity)-[:MENTIONED_IN]->(:Document)
+(:Person)-[:WORKS_FOR]->(:Organization)
+(:Entity)-[:RELATED_TO {confidence, type}]->(:Entity)
+(:Document)-[:CONTAINS]->(:Entity)
+```
 
-5. Conclusion
+## Query Processing Flow
 
-The Chat API in TheDrive enables users to interact with their files through contextual AI-powered queries, leveraging GraphRAG for document-based insights. By integrating GraphRAG, TheDrive provides a unique and intelligent way for users to retrieve information from their files. This system allows for both file-specific queries and semantic search, providing users with accurate, context-aware answers while ensuring smooth integration with AI processing and graph-based models.
+### Step-by-Step Query Resolution
 
-The API is designed to handle errors gracefully and provide fallback responses when necessary, ensuring a seamless user experience even when the underlying AI service is unavailable.
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant RAG_API
+    participant LLM
+    participant ChromaDB
+    participant Neo4j
+    
+    User->>Frontend: Ask Question
+    Frontend->>RAG_API: Query Request
+    RAG_API->>RAG_API: Query Analysis
+    RAG_API->>LLM: Extract Query Entities
+    LLM-->>RAG_API: Entity List
+    
+    par Vector Search
+        RAG_API->>ChromaDB: Similarity Search
+        ChromaDB-->>RAG_API: Relevant Chunks
+    and Graph Search
+        RAG_API->>Neo4j: Graph Traversal
+        Neo4j-->>RAG_API: Connected Facts
+    end
+    
+    RAG_API->>RAG_API: Context Assembly
+    RAG_API->>LLM: Enhanced Prompt
+    LLM-->>RAG_API: Generated Answer
+    RAG_API-->>Frontend: Response + Citations
+    Frontend-->>User: Final Answer
+```
+
+## Context Enrichment Strategy
+
+### Information Layering
+
+```mermaid
+graph TB
+    subgraph "Context Assembly"
+        A[Raw Query] --> B[Entity Extraction]
+        B --> C[Graph Fact Retrieval]
+        B --> D[Vector Similarity Search]
+        
+        C --> E[Structured Knowledge]
+        D --> F[Unstructured Text Chunks]
+        
+        E --> G[Context Layering]
+        F --> G
+        
+        G --> H[Final Context]
+    end
+    
+    subgraph "Context Structure"
+        H --> I[Graph Facts Section]
+        H --> J[Raw Text Section]
+        H --> K[Conversation Context]
+        
+        I --> L[Structured Knowledge Facts]
+        J --> M[Source Document Chunks]
+        K --> N[Previous Q&A History]
+    end
+```
+
+## File-Vector DB Mapping System
+
+### Re-ingestion Feature Flow
+
+```mermaid
+graph TD
+    A[User Login] --> B[Check Ingestion Status API]
+    B --> C[Query Database for File Status]
+    C --> D{Files Need Processing?}
+    
+    D -->|Yes| E[Show Re-ingestion Button]
+    D -->|No| F[Hide Button]
+    
+    E --> G[User Clicks Button]
+    G --> H[Confirm Re-ingestion]
+    H --> I[Start Background Processing]
+    I --> J[Disable Chat Interface]
+    J --> K[Process Pending Files]
+    K --> L[Update File Status]
+    L --> M[Poll Status Updates]
+    M --> N{All Files Processed?}
+    
+    N -->|No| M
+    N -->|Yes| O[Re-enable Chat]
+    O --> P[Hide Button]
+```
+
+### Database Schema for File Tracking
+
+```sql
+-- FileSystemItem table tracks ingestion status
+CREATE TABLE filesystem_items (
+    id VARCHAR PRIMARY KEY,
+    name VARCHAR NOT NULL,
+    type VARCHAR NOT NULL, -- 'file' or 'folder'
+    owner_id INTEGER REFERENCES users(id),
+    parent_id VARCHAR REFERENCES filesystem_items(id),
+    s3_key VARCHAR, -- For files only
+    mime_type VARCHAR,
+    size_bytes BIGINT,
+    ingestion_status VARCHAR, -- 'pending', 'processing', 'completed', 'failed'
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## Confidence-Based Quality Control
+
+### Entity Confidence Scoring
+
+```mermaid
+graph LR
+    subgraph "Confidence Metrics"
+        A[Entity Extraction] --> B[LLM Confidence Score]
+        A --> C[Named Entity Recognition Score]
+        A --> D[Context Relevance Score]
+        A --> E[Cross-Reference Validation]
+    end
+    
+    subgraph "Scoring Algorithm"
+        B --> F[Weighted Average]
+        C --> F
+        D --> F
+        E --> F
+        F --> G[Final Confidence Score]
+    end
+    
+    subgraph "Quality Filtering"
+        G --> H{Score >= Threshold?}
+        H -->|Yes| I[Include in Graph]
+        H -->|No| J[Exclude from Graph]
+    end
+```
+
+### Graph Cleanup Process
+
+```mermaid
+graph TD
+    A[Periodic Cleanup] --> B[Identify Low-Confidence Entities]
+    B --> C[Check Entity Usage]
+    C --> D{Used in Queries?}
+    
+    D -->|Yes| E[Increase Confidence]
+    D -->|No| F{Below Minimum Threshold?}
+    
+    F -->|Yes| G[Remove Entity]
+    F -->|No| H[Keep Entity]
+    
+    G --> I[Update Connected Relations]
+    E --> J[Maintain Entity]
+    H --> J
+    I --> J
+```
+
+## API Endpoints
+
+### Key RAG API Endpoints
+
+```yaml
+# Document Ingestion
+POST /ingest/file
+  - Upload and process document
+  - Returns: ingestion_id, status
+
+# Query Processing
+POST /query/stream
+  - Streaming RAG query with SSE
+  - Returns: Server-Sent Events stream
+
+GET /query
+  - Non-streaming RAG query
+  - Returns: answer, citations, confidence
+
+# Graph Management
+GET /graph/stats
+  - Graph statistics and health
+  - Returns: node_count, relationship_count, confidence_distribution
+
+POST /graph/cleanup
+  - Clean low-confidence entities
+  - Returns: removed_count, updated_count
+
+# Status Checking
+GET /drive/check-ingestion-status
+  - Check user files needing ingestion
+  - Returns: needs_ingestion, files_count, is_active
+
+POST /drive/reingest-files
+  - Trigger re-ingestion of pending files
+  - Returns: processed_count, failed_files
+```
+
+## Performance Optimizations
+
+### Caching Strategy
+
+```mermaid
+graph LR
+    subgraph "Multi-Level Caching"
+        A[User Query] --> B[Query Cache Check]
+        B --> C{Cache Hit?}
+        
+        C -->|Yes| D[Return Cached Result]
+        C -->|No| E[Process Query]
+        
+        E --> F[Vector Cache Check]
+        F --> G[Graph Cache Check]
+        G --> H[LLM Processing]
+        H --> I[Cache Result]
+        I --> J[Return Response]
+    end
+```
+
+### Parallel Processing
+
+```mermaid
+graph TB
+    subgraph "Concurrent Operations"
+        A[Query Received] --> B[Split Processing]
+        
+        B --> C[Vector Search Thread]
+        B --> D[Graph Search Thread]
+        B --> E[Entity Extraction Thread]
+        
+        C --> F[ChromaDB Query]
+        D --> G[Neo4j Query]
+        E --> H[LLM Entity Analysis]
+        
+        F --> I[Result Aggregation]
+        G --> I
+        H --> I
+        
+        I --> J[Context Assembly]
+        J --> K[Final Response]
+    end
+```
+
+## Configuration Settings
+
+### Environment Variables
+
+```env
+# GraphRAG Configuration
+ENABLE_GRAPHRAG=1
+ENTITY_CONFIDENCE_THRESHOLD=0.6
+RELATION_CONFIDENCE_THRESHOLD=0.7
+ENABLE_EMBEDDING_VALIDATION=1
+
+# Vector Database
+CHROMA_URL=http://chroma:8000
+COLLECTION=thedrive
+
+# Graph Database
+NEO4J_URL=bolt://neo4j:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password123
+
+# LLM Configuration
+GEMINI_API_KEY=your_api_key
+MODEL_NAME=gemini-1.5-pro
+RESPONSE_MODEL=gemini-2.5-pro
+
+# Context Limits
+MAX_CONTEXT_CHARS=12000
+```
+
+## Monitoring and Analytics
+
+### System Health Metrics
+
+```mermaid
+graph LR
+    subgraph "Performance Metrics"
+        A[Query Response Time]
+        B[Vector Search Latency]
+        C[Graph Query Performance]
+        D[LLM API Response Time]
+    end
+    
+    subgraph "Quality Metrics"
+        E[Answer Relevance Score]
+        F[Citation Accuracy]
+        G[Graph Fact Precision]
+        H[User Satisfaction Rating]
+    end
+    
+    subgraph "System Metrics"
+        I[Database Connection Pool]
+        J[Memory Usage]
+        K[Storage Utilization]
+        L[API Error Rates]
+    end
+```
+
+## Benefits of the Hybrid Approach
+
+### RAG + KAG Advantages
+
+1. **Enhanced Context Understanding**
+   - Vector search provides semantic similarity
+   - Knowledge graph provides structured relationships
+   - Combined approach offers comprehensive context
+
+2. **Improved Answer Quality**
+   - Factual accuracy through structured knowledge
+   - Contextual relevance through vector similarity
+   - Reduced hallucination through grounded facts
 
 
----
-
-### Key Sections:
-1. **POST /query**: Handles AI-driven chat queries, processes context, and returns answers.
-2. **GET /status**: Provides the status of the AI processing for the user’s files.
-3. **GraphRAG Integration**: Explains how **GraphRAG** and **PDFChatter** are used to process user queries and provide insights.
-4. **Error Handling**: Describes how the system manages errors, such as unavailable services or invalid contexts.
-
-This **Chat API** documentation gives users and developers a clear understanding of how the **AI-powered chat feature** works in **TheDrive**, ensuring seamless interaction with files and AI models.
