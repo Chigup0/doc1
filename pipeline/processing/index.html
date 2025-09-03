@@ -22,7 +22,7 @@
     
     
       
-        <title>Processing - The Drive</title>
+        <title>Constructing Knowledge Graphs: Major Functions - The Drive</title>
       
     
     
@@ -73,6 +73,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#constructing-knowledge-graphs-major-functions" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -103,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Processing
+              Constructing Knowledge Graphs: Major Functions
             
           </span>
         </div>
@@ -310,26 +315,6 @@
   
   
   Deployment
-
-        </a>
-      </li>
-    
-  
-
-      
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../about/team.md" class="md-tabs__link">
-          
-  
-  
-  About
 
         </a>
       </li>
@@ -625,29 +610,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../setup/configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Configuration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -909,29 +871,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/examples.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Examples
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1058,125 +997,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    About
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            About
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/team.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Team
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/acknowledgments.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Acknowledgments
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/license.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    License
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1193,9 +1013,319 @@
 
 
 
-  <h1>Processing</h1>
+<h1 id="constructing-knowledge-graphs-major-functions">Constructing Knowledge Graphs: Major Functions</h1>
+<h2 id="entity-extraction-with-llm-prompts">Entity Extraction with LLM Prompts</h2>
+<p><strong>code snippet: Entity Extraction Prompt</strong></p>
+<pre><code class="language-python">ENTITY_EXTRACTION_PROMPT = &quot;&quot;&quot;
+You are a highly-specialized entity extraction model. Your task is to extract all salient entities from the provided text with confidence scores.
 
+**Instructions:**
+1. **Strict Adherence:** Analyze the entire text and extract every important entity.
+2. **Canonical Form:** Present the entity name in its most standard form (e.g., &quot;AI&quot; → &quot;Artificial Intelligence&quot;).
+3. **Type Specificity:** Assign entity types: PERSON, ORGANIZATION, LOCATION, PRODUCT, TECHNOLOGY, EVENT, CONCEPT, TIME, NUMBER, MISCELLANEOUS.
+4. **Attribute Richness:** Identify all relevant attributes and properties as a structured JSON object.
+5. **Confidence Score:** Provide confidence (0.0-1.0) based on:
+   - How clearly mentioned (0.9-1.0 for explicit mentions)
+   - Relevance to main topic (0.7-0.9 for highly relevant)
+   - Supporting context (0.5-0.7 for implied/context-dependent)
 
+Return ONLY a JSON array with 'name', 'type', 'attributes', and 'confidence' fields.
+Text: {text}
+&quot;&quot;&quot;
+
+def extract_entities(text: str) -&gt; List[Dict[str, str]]:
+    &quot;&quot;&quot;Extract entities with types, attributes, and confidence scores using LLM.&quot;&quot;&quot;
+    try:
+        llm_instance = get_llm()
+        prompt = ENTITY_EXTRACTION_PROMPT.format(text=text)
+        response = llm_instance.invoke(prompt).content.strip()
+
+        entities = _safe_extract_json(response, list)
+        if not entities:
+            return []
+
+        # Validate entities against text to reduce hallucinations
+        validated_entities = []
+        for entity in entities:
+            if _validate_entity_in_text(entity.get('name', ''), text):
+                validated_entities.append(entity)
+
+        # Deduplicate similar entities
+        return _deduplicate_entities(validated_entities)
+
+    except Exception as e:
+        print(f&quot;[GraphRAG] Entity extraction failed: {e}&quot;)
+        return []
+</code></pre>
+<h2 id="confidence-based-graph-operations">Confidence-Based Graph Operations</h2>
+<ol>
+<li><strong>Neo4jGraphRAG Class</strong></li>
+<li>Manages Neo4j connection, creates constraints and indexes, and provides graph operations.</li>
+<li>Ensures unique entity names and efficient graph queries via indexes.</li>
+</ol>
+<p><strong>code snippet: Graph Database Initialization</strong></p>
+<pre><code class="language-python">class Neo4jGraphRAG:
+    def __init__(self):
+        self.driver = None
+        self._connect()
+
+    def _connect(self):
+        &quot;&quot;&quot;Initialize Neo4j connection.&quot;&quot;&quot;
+        try:
+            self.driver = GraphDatabase.driver(NEO4J_URL, auth=(NEO4J_USER, NEO4J_PASSWORD))
+            # Test connection
+            with self.driver.session() as session:
+                session.run(&quot;RETURN 1&quot;)
+            print(f&quot;[GraphRAG] Connected to Neo4j at {NEO4J_URL}&quot;)
+            self._create_constraints()
+        except Exception as e:
+            print(f&quot;[GraphRAG] Failed to connect to Neo4j: {e}&quot;)
+            self.driver = None
+
+    def _create_constraints(self):
+        &quot;&quot;&quot;Create necessary constraints and indexes.&quot;&quot;&quot;
+        with self.driver.session() as session:
+            try:
+                session.run(&quot;CREATE CONSTRAINT entity_name IF NOT EXISTS FOR (e:Entity) REQUIRE e.name IS UNIQUE&quot;)
+                session.run(&quot;CREATE INDEX entity_type_idx IF NOT EXISTS FOR (e:Entity) ON (e.type)&quot;)
+                session.run(&quot;CREATE INDEX document_file_idx IF NOT EXISTS FOR (d:Document) ON (d.file_id)&quot;)
+                session.run(&quot;CREATE INDEX chunk_file_idx IF NOT EXISTS FOR (c:Chunk) ON (c.file_id)&quot;)
+                print(&quot;[GraphRAG] Neo4j constraints and indexes created&quot;)
+            except Exception as e:
+                print(f&quot;[GraphRAG] Warning: Could not create constraints/indexes: {e}&quot;)
+
+    def close(self):
+        &quot;&quot;&quot;Close Neo4j connection.&quot;&quot;&quot;
+        if self.driver:
+            self.driver.close()
+
+    def is_connected(self):
+        &quot;&quot;&quot;Check if Neo4j is connected.&quot;&quot;&quot;
+        return self.driver is not None
+</code></pre>
+<ol>
+<li><strong>Entity Extraction &amp; Validation</strong></li>
+<li><code>extract_entities(text)</code>: Uses LLM to extract canonical entities, types, attributes, and confidence scores from text.</li>
+<li><code>_validate_entity_in_text(entity_name, text)</code>: Ensures entities are present in the text to reduce hallucinations.</li>
+<li><code>_deduplicate_entities(entities)</code>: Merges similar entities and attributes to reduce noise.</li>
+<li><code>_calculate_similarity(str1, str2)</code>: Measures similarity for deduplication.</li>
+<li><strong>Relation Extraction</strong></li>
+<li><code>extract_relations(text, entities)</code>: Uses LLM to extract relationships (subject, predicate, object, context, confidence) between entities in text.</li>
+<li>Validates that both subject and object exist in the extracted entities or text.</li>
+<li><strong>Graph Upsert and Linking</strong></li>
+<li><code>upsert_entities_and_relations(file_id, page, chunk_no, source, text)</code>: Extracts entities/relations from a chunk and stores them in Neo4j, linking documents, chunks, entities, and relationships with confidence scores.</li>
+<li>Links document and chunk nodes, and connects entities and relations to their source chunks.</li>
+<li>Supports dynamic graph updates as new files are ingested and existing files are modified.</li>
+<li><strong>Query Entity Extraction</strong></li>
+<li><code>extract_query_entities(query)</code>: Uses LLM to extract key entities from a user query for targeted graph lookup.</li>
+<li><strong>Subgraph Fact Retrieval</strong></li>
+<li><code>get_subgraph_facts(entities, file_id, folder_id, ...)</code>: Retrieves high-confidence facts and relationships from the graph relevant to the query entities, supporting multi-hop and fuzzy matching.</li>
+<li>Uses exact, type-based, and partial/fuzzy matching strategies.</li>
+</ol>
+<p><strong>code snippet: Intelligent Graph Querying</strong></p>
+<pre><code class="language-python">def get_subgraph_facts(
+    entities: List[str],
+    file_id: Optional[str] = None,
+    folder_id: Optional[str] = None,
+    max_facts: int = MAX_FACTS,
+    min_confidence: float = 0.6
+) -&gt; str:
+    &quot;&quot;&quot;
+    Build a textual block of 'facts' from the Neo4j graph, filtered by file_id and confidence.
+    Uses intelligent matching: exact names, then types, then partial matches.
+    Prioritizes high-confidence entities and relations to reduce noise.
+    &quot;&quot;&quot;
+    if not entities or not get_graph_db().is_connected():
+        return &quot;&quot;
+
+    try:
+        with get_graph_db().driver.session() as session:
+            facts = []
+            processed_entities = set()
+
+            for query_entity in entities:
+                query_entity_lower = query_entity.lower()
+
+                # Strategy 1: Exact name match (case-insensitive) with confidence filtering
+                entity_result = session.run(&quot;&quot;&quot;
+                    MATCH (e:Entity)
+                    WHERE toLower(e.name) = $entity_name
+                    AND (e.confidence IS NULL OR e.confidence &gt;= $min_confidence)
+                    OPTIONAL MATCH (c:Chunk)-[:MENTIONS]-&gt;(e)
+                    WHERE ($file_id IS NULL OR c.file_id = $file_id)
+                    RETURN e.name as name, e.type as type, e.attributes as attributes,
+                           e.confidence as confidence,
+                           collect(DISTINCT c.file_id) as mentioned_in_files
+                    ORDER BY e.confidence DESC
+                    LIMIT 5
+                &quot;&quot;&quot;, entity_name=query_entity_lower, file_id=file_id, min_confidence=min_confidence)
+
+                found_entities = list(entity_result)
+
+                # Strategy 2: If no exact match, try type-based matching
+                if not found_entities:
+                    # Map common query terms to types
+                    type_mapping = {
+                        'sets': 'SET', 'set': 'SET',
+                        'functions': 'FUNCTION', 'function': 'FUNCTION',
+                        'concepts': 'CONCEPT', 'concept': 'CONCEPT',
+                        'locations': 'LOCATION', 'location': 'LOCATION'
+                    }
+
+                    target_type = type_mapping.get(query_entity_lower)
+                    if target_type:
+                        entity_result = session.run(&quot;&quot;&quot;
+                            MATCH (e:Entity)
+                            WHERE e.type = $entity_type
+                            AND (e.confidence IS NULL OR e.confidence &gt;= $min_confidence)
+                            OPTIONAL MATCH (c:Chunk)-[:MENTIONS]-&gt;(e)
+                            WHERE ($file_id IS NULL OR c.file_id = $file_id)
+                            RETURN e.name as name, e.type as type, e.attributes as attributes,
+                                   e.confidence as confidence,
+                                   collect(DISTINCT c.file_id) as mentioned_in_files
+                            ORDER BY e.confidence DESC
+                            LIMIT 5
+                        &quot;&quot;&quot;, entity_type=target_type, file_id=file_id, min_confidence=min_confidence)
+
+                        found_entities = list(entity_result)
+</code></pre>
+<ol>
+<li><strong>Graph Statistics and Analytics</strong></li>
+<li><code>get_graph_stats()</code>: Returns counts and confidence metrics for entities, relationships, documents, and chunks in the graph.</li>
+<li>Tracks entity types, average confidence, and high-confidence counts.</li>
+<li>Supports document and chunk statistics for analytics.</li>
+<li><strong>Graph Cleanup and Maintenance</strong></li>
+<li><code>cleanup_low_confidence_entities(confidence_threshold)</code>: Removes entities and relations below a confidence threshold to keep the graph high-quality.</li>
+<li><code>update_confidence_thresholds(entity_threshold, relation_threshold)</code>: Updates global thresholds for entity/relation filtering.</li>
+<li><code>clear_graph()</code>: Deletes all nodes and relationships from the Neo4j graph.</li>
+</ol>
+<p><strong>code snippet: Confidence-Based Cleanup</strong></p>
+<pre><code class="language-python">def cleanup_low_confidence_entities(confidence_threshold: float = None) -&gt; Dict:
+    &quot;&quot;&quot;
+    Remove entities and relations below the confidence threshold to clean up the graph.
+    &quot;&quot;&quot;
+    if not get_graph_db().is_connected():
+        return {&quot;error&quot;: &quot;GraphRAG not connected&quot;}
+
+    if confidence_threshold is None:
+        confidence_threshold = ENTITY_CONFIDENCE_THRESHOLD
+
+    try:
+        with get_graph_db().driver.session() as session:
+            # Delete low-confidence entities
+            entity_result = session.run(&quot;&quot;&quot;
+                MATCH (e:Entity)
+                WHERE e.confidence &lt; $threshold
+                DETACH DELETE e
+                RETURN count(e) as deleted_entities
+            &quot;&quot;&quot;, threshold=confidence_threshold)
+
+            # Delete low-confidence relations
+            relation_result = session.run(&quot;&quot;&quot;
+                MATCH ()-[r:RELATED_TO]-()
+                WHERE r.confidence &lt; $threshold
+                DELETE r
+                RETURN count(r) as deleted_relations
+            &quot;&quot;&quot;, threshold=confidence_threshold)
+
+            deleted_entities = entity_result.single()[&quot;deleted_entities&quot;]
+            deleted_relations = relation_result.single()[&quot;deleted_relations&quot;]
+
+            return {
+                &quot;success&quot;: True,
+                &quot;deleted_entities&quot;: deleted_entities,
+                &quot;deleted_relations&quot;: deleted_relations,
+                &quot;threshold_used&quot;: confidence_threshold
+            }
+
+    except Exception as e:
+        return {&quot;error&quot;: f&quot;Cleanup failed: {e}&quot;}
+
+def get_graph_stats() -&gt; Dict:
+    &quot;&quot;&quot;Get comprehensive statistics about the knowledge graph.&quot;&quot;&quot;
+    if not get_graph_db().is_connected():
+        return {&quot;error&quot;: &quot;GraphRAG not connected&quot;}
+
+    try:
+        with get_graph_db().driver.session() as session:
+            # Entity statistics
+            entity_stats = session.run(&quot;&quot;&quot;
+                MATCH (e:Entity)
+                RETURN
+                    count(e) as total_entities,
+                    avg(e.confidence) as avg_entity_confidence,
+                    count(CASE WHEN e.confidence &gt;= $high_conf THEN 1 END) as high_conf_entities,
+                    collect(DISTINCT e.type) as entity_types
+            &quot;&quot;&quot;, high_conf=0.8).single()
+
+            # Relation statistics
+            relation_stats = session.run(&quot;&quot;&quot;
+                MATCH ()-[r:RELATED_TO]-()
+                RETURN
+                    count(r) as total_relations,
+                    avg(r.confidence) as avg_relation_confidence,
+                    count(CASE WHEN r.confidence &gt;= $high_conf THEN 1 END) as high_conf_relations
+            &quot;&quot;&quot;, high_conf=0.8).single()
+
+            # Document statistics
+            doc_stats = session.run(&quot;&quot;&quot;
+                MATCH (d:Document)
+                OPTIONAL MATCH (d)-[:CONTAINS]-&gt;(c:Chunk)
+                RETURN
+                    count(d) as total_documents,
+                    count(c) as total_chunks
+            &quot;&quot;&quot;).single()
+
+            return {
+                &quot;entities&quot;: {
+                    &quot;total&quot;: entity_stats[&quot;total_entities&quot;],
+                    &quot;average_confidence&quot;: round(entity_stats[&quot;avg_entity_confidence&quot;] or 0, 3),
+                    &quot;high_confidence_count&quot;: entity_stats[&quot;high_conf_entities&quot;],
+                    &quot;types&quot;: entity_stats[&quot;entity_types&quot;] or []
+                },
+                &quot;relations&quot;: {
+                    &quot;total&quot;: relation_stats[&quot;total_relations&quot;],
+                    &quot;average_confidence&quot;: round(relation_stats[&quot;avg_relation_confidence&quot;] or 0, 3),
+                    &quot;high_confidence_count&quot;: relation_stats[&quot;high_conf_relations&quot;]
+                },
+                &quot;documents&quot;: {
+                    &quot;total&quot;: doc_stats[&quot;total_documents&quot;],
+                    &quot;chunks&quot;: doc_stats[&quot;total_chunks&quot;]
+                },
+                &quot;thresholds&quot;: {
+                    &quot;entity_confidence&quot;: ENTITY_CONFIDENCE_THRESHOLD,
+                    &quot;relation_confidence&quot;: RELATION_CONFIDENCE_THRESHOLD
+                }
+            }
+
+    except Exception as e:
+        return {&quot;error&quot;: f&quot;Stats retrieval failed: {e}&quot;}
+</code></pre>
+<ol>
+<li><strong>Constraint and Index Management</strong></li>
+<li><code>_create_constraints()</code>: Ensures unique entity names and efficient graph queries via indexes.</li>
+<li><strong>Lazy Initialization and Connection Checking</strong><ul>
+<li><code>get_graph_db()</code>: Provides a singleton instance of the graph database connection.</li>
+<li><code>is_connected()</code>: Checks if the Neo4j connection is active.</li>
+</ul>
+</li>
+<li><strong>Confidence-Based Filtering</strong><ul>
+<li>All major extraction and retrieval functions use confidence scores to filter and rank entities and relations, improving answer quality and reducing noise.</li>
+</ul>
+</li>
+<li><strong>Logging and Error Handling</strong><ul>
+<li>All functions include logging and error handling to ensure robustness and traceability.</li>
+</ul>
+</li>
+<li><strong>Multi-Hop and Fuzzy Matching</strong><ul>
+<li>Subgraph retrieval supports multi-hop reasoning and fuzzy matching for advanced queries.</li>
+</ul>
+</li>
+<li><strong>Dynamic Graph Updates</strong><ul>
+<li>Graph structure is updated as files are added, modified, or deleted, keeping knowledge up-to-date.</li>
+</ul>
+</li>
+</ol>
 
 
 

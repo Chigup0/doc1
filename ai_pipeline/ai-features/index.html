@@ -322,26 +322,6 @@
   
 
       
-        
-  
-  
-  
-  
-    
-    
-      <li class="md-tabs__item">
-        <a href="../../about/team.md" class="md-tabs__link">
-          
-  
-  
-  About
-
-        </a>
-      </li>
-    
-  
-
-      
     </ul>
   </div>
 </nav>
@@ -630,29 +610,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../setup/configuration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Configuration
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -914,29 +871,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/examples.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Examples
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1063,125 +997,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
-        
-          
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    About
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
-            <span class="md-nav__icon md-icon"></span>
-            About
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/team.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Team
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/acknowledgments.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Acknowledgments
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../about/license.md" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    License
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1199,7 +1014,6 @@
 
 
 <h3 id="docsusageai-featuresmd">docs/usage/ai-features.md</h3>
-<p>```markdown</p>
 <h1 id="ai-features-guide">AI Features Guide</h1>
 <p>Zenith Drive incorporates advanced AI capabilities to enhance your file management experience.</p>
 <h2 id="contextual-chat">Contextual Chat</h2>
@@ -1237,6 +1051,61 @@
 <li>Extract text via OCR</li>
 <li>Analyze charts and diagrams</li>
 </ul>
+<p><strong>Technical Implementation - Multi-Modal Image Processing:</strong></p>
+<pre><code class="language-python">def process_uploaded_image(image_data: bytes, llm=None) -&gt; Document:
+    &quot;&quot;&quot;Process uploaded image and return a Document with comprehensive analysis.&quot;&quot;&quot;
+    try:
+        # Open image
+        image = Image.open(io.BytesIO(image_data))
+
+        # Perform comprehensive analysis
+        analysis_results = image_processor.comprehensive_image_analysis(image, llm)
+
+        # Create content for the document
+        content_parts = []
+
+        # Add OCR text if available
+        if analysis_results['ocr'].get('full_text'):
+            content_parts.append(f&quot;OCR Text: {analysis_results['ocr']['full_text']}&quot;)
+
+        # Add structure information
+        if analysis_results['structure'].get('shapes'):
+            shapes_info = f&quot;Detected {analysis_results['structure']['total_shapes']} shapes and {analysis_results['structure']['total_lines']} lines&quot;
+            content_parts.append(shapes_info)
+
+        # Add entity information if available
+        if analysis_results.get('entities', {}).get('entities_detected'):
+            content_parts.append(f&quot;Entities: {analysis_results['entities']['entities_detected']}&quot;)
+
+        # Add chart analysis if available
+        if analysis_results.get('chart', {}).get('chart_analysis'):
+            content_parts.append(f&quot;Chart Analysis: {analysis_results['chart']['chart_analysis']}&quot;)
+
+        content = '\n\n'.join(content_parts) if content_parts else analysis_results['summary']
+
+        # Create document
+        document = Document(
+            page_content=content,
+            metadata={
+                'type': 'image_analysis',
+                'analysis_results': analysis_results,
+                'has_text': bool(analysis_results['ocr'].get('full_text')),
+                'has_shapes': bool(analysis_results['structure'].get('shapes')),
+                'has_entities': bool(analysis_results.get('entities', {}).get('entities_detected')),
+                'image_size': analysis_results['image_info']['size'],
+                'timestamp': analysis_results['timestamp']
+            }
+        )
+
+        return document
+
+    except Exception as e:
+        logger.error(f&quot;Image processing failed: {e}&quot;)
+        return Document(
+            page_content=f&quot;Error processing image: {str(e)}&quot;,
+            metadata={'type': 'image_error', 'error': str(e)}
+        )
+</code></pre>
 <h3 id="table-operations">Table Operations</h3>
 <p>Select table data to:</p>
 <ul>
@@ -1251,6 +1120,117 @@
 <li>"Locate images from beach vacations"</li>
 <li>"Find spreadsheets with sales data"</li>
 </ul>
+<p><strong>Technical Implementation - Hybrid RAG + GraphRAG Search:</strong></p>
+<pre><code class="language-python">def rag_answer(question: str, conversation_id: str = None, confidence_threshold: float = None) -&gt; Dict[str, Any]:
+    &quot;&quot;&quot;
+    Advanced semantic search with conversation awareness and confidence gating
+    &quot;&quot;&quot;
+    if confidence_threshold is None:
+        confidence_threshold = CONFIDENCE_THRESHOLD
+
+    try:
+        # Check if this is a follow-up question
+        is_followup = False
+        if conversation_id:
+            is_followup = detect_followup_question(question, conversation_id)
+
+        # Vector similarity search
+        vector_docs = vector_db.similarity_search_with_score(question, k=10)
+        confident_docs = [(doc, score) for doc, score in vector_docs if score &gt;= confidence_threshold]
+
+        if not confident_docs:
+            return {
+                &quot;answer&quot;: &quot;I couldn't find relevant information with sufficient confidence. Try being more specific.&quot;,
+                &quot;confidence&quot;: 0.0,
+                &quot;sources&quot;: [],
+                &quot;method&quot;: &quot;insufficient_confidence&quot;
+            }
+
+        # Graph-based contextual enhancement
+        graph_context = &quot;&quot;
+        if get_graph_db().is_connected():
+            entities = extract_entities_simple(question)
+            if entities:
+                graph_facts = get_subgraph_facts(entities, max_facts=5)
+                if graph_facts:
+                    graph_context = f&quot;\n\nKnowledge Graph Context:\n{graph_facts}&quot;
+
+        # Prepare context for LLM
+        context_parts = []
+        source_info = []
+
+        for doc, confidence in confident_docs[:5]:  # Top 5 most confident results
+            context_parts.append(f&quot;Document: {doc.metadata.get('source', 'unknown')}\n{doc.page_content}&quot;)
+            source_info.append({
+                &quot;source&quot;: doc.metadata.get('source', 'unknown'),
+                &quot;confidence&quot;: float(confidence),
+                &quot;chunk_id&quot;: doc.metadata.get('chunk_id', 'unknown')
+            })
+
+        full_context = &quot;\n\n---\n\n&quot;.join(context_parts) + graph_context
+
+        # Generate answer with conversation awareness
+        conversation_prompt = &quot;&quot;
+        if is_followup and conversation_id:
+            conversation_prompt = f&quot;\nNote: This appears to be a follow-up question in conversation {conversation_id}. Consider previous context appropriately.&quot;
+
+        prompt = f&quot;&quot;&quot;Based on the following context, answer the question accurately and concisely.
+
+Context:
+{full_context}
+
+Question: {question}{conversation_prompt}
+
+Provide a helpful answer based on the context. If the context doesn't contain enough information, say so clearly.&quot;&quot;&quot;
+
+        # Generate response
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt)
+
+        # Calculate overall confidence
+        avg_confidence = sum(conf for _, conf in confident_docs[:5]) / len(confident_docs[:5])
+
+        return {
+            &quot;answer&quot;: response.text,
+            &quot;confidence&quot;: round(avg_confidence, 3),
+            &quot;sources&quot;: source_info,
+            &quot;method&quot;: &quot;hybrid_rag_graphrag&quot;,
+            &quot;is_followup&quot;: is_followup,
+            &quot;graph_enhanced&quot;: bool(graph_context.strip())
+        }
+
+    except Exception as e:
+        return {
+            &quot;answer&quot;: f&quot;Error processing question: {e}&quot;,
+            &quot;confidence&quot;: 0.0,
+            &quot;sources&quot;: [],
+            &quot;method&quot;: &quot;error&quot;
+        }
+
+def detect_followup_question(question: str, conversation_id: str) -&gt; bool:
+    &quot;&quot;&quot;
+    Detect if a question is a follow-up in a conversation using AI
+    &quot;&quot;&quot;
+    followup_indicators = [
+        &quot;what about&quot;, &quot;and&quot;, &quot;also&quot;, &quot;furthermore&quot;, &quot;additionally&quot;,
+        &quot;what&quot;, &quot;how&quot;, &quot;why&quot;, &quot;when&quot;, &quot;where&quot;, &quot;which&quot;, &quot;that&quot;,
+        &quot;it&quot;, &quot;this&quot;, &quot;these&quot;, &quot;those&quot;, &quot;they&quot;, &quot;them&quot;
+    ]
+
+    question_lower = question.lower()
+
+    # Check for pronouns and follow-up indicators
+    has_followup_words = any(indicator in question_lower for indicator in followup_indicators)
+
+    # Check for short questions (likely follow-ups)
+    is_short = len(question.split()) &lt; 8
+
+    # Check for missing context (pronouns without clear antecedents)
+    pronouns = [&quot;it&quot;, &quot;this&quot;, &quot;that&quot;, &quot;they&quot;, &quot;them&quot;, &quot;these&quot;, &quot;those&quot;]
+    has_pronouns = any(pronoun in question_lower.split() for pronoun in pronouns)
+
+    return (has_followup_words and is_short) or has_pronouns
+</code></pre>
 <h2 id="cross-reference-features">Cross-Reference Features</h2>
 <p>When the AI references information from files:</p>
 <ol>
@@ -1267,23 +1247,23 @@
 </ul>
 <h2 id="api-integration">API Integration</h2>
 <p>Developers can access AI features through our API:</p>
-<p><code>``javascript
-// Example: Querying drive context
-const response = await fetch('/api/ai/query', {
-  method: 'POST',
+<pre><code class="language-javascript">// Example: Querying drive context
+const response = await fetch(&quot;/api/ai/query&quot;, {
+  method: &quot;POST&quot;,
   headers: {
-    'Authorization':</code>Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    &quot;Content-Type&quot;: &quot;application/json&quot;,
   },
   body: JSON.stringify({
-    query: "Summarize my project documents",
-    context: "drive", // or "folder/:id", "file/:id"
+    query: &quot;Summarize my project documents&quot;,
+    context: &quot;drive&quot;, // or &quot;folder/:id&quot;, &quot;file/:id&quot;
     options: {
       include_citations: true,
-      generate_visualization: false
-    }
-  })
-});</p>
+      generate_visualization: false,
+    },
+  }),
+});
+</code></pre>
 
 
 
